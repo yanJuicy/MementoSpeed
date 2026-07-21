@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Memento Speed",
+  "version": "1.0",
+  "description": "Remember Youtbe Video Speed",
+  "content_scripts": [
+    {
+      "js": ["scripts/content.js"],
+      "matches": [
+        "https://www.youtube.com/*"
+      ]
+    }
+  ]
+}
