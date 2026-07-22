@@ -23,7 +23,6 @@ const callback = (mutationsList, observer) => {
   if (!video) {
     return;
   }
-
   for (const mutation of mutationsList) {
     if (mutation.type === "childList") {
       const newVideoId = getCurrentVideoId();
@@ -33,7 +32,10 @@ const callback = (mutationsList, observer) => {
         console.log(video.readyState);
         console.log(video.playbackRate);
         currentVideoId = newVideoId;
-        video.playbackRate = 2;
+        video.addEventListener("loadedmetadata", () => {
+          console.log("영상속도변경");
+          video.playbackRate = 2;
+        });
       }
     }
   }
