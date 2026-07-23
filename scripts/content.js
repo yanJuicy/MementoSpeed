@@ -8,6 +8,31 @@ function checkVideoPage() {
   return location.pathname === "/watch";
 }
 
+function findVideo() {
+  return document.querySelector("video");
+}
+
+function applyPlaybackRate(video, playbackRate) {
+  console.log(`${playbackRate}로 속도 조절`);
+  video.playbackRate = playbackRate;
+}
+
+function handleVideoChange(video) {
+  console.log("영상 변경!");
+  console.log(video);
+  console.log(`video readyState: ${video.readyState}`);
+  console.log(`video playbackRate: ${video.playbackRate}`);
+
+  console.log("loadedmetadata 리스너 등록");
+  video.addEventListener(
+    "loadedmetadata",
+    () => {
+      applyPlaybackRate(video, 2);
+    },
+    { once: true },
+  );
+}
+
 let currentVideoId = getCurrentVideoId();
 
 const targetNode = document.body;
@@ -19,26 +44,26 @@ const callback = (mutationsList, observer) => {
   }
 
   // <video> 태그가 존재하면 속도 조절
-  const video = document.querySelector("video");
+  const video = findVideo();
   if (!video) {
     return;
   }
-  for (const mutation of mutationsList) {
-    if (mutation.type === "childList") {
-      const newVideoId = getCurrentVideoId();
-      if (currentVideoId !== newVideoId) {
-        console.log("영상 변경!");
-        console.log(video);
-        console.log(video.readyState);
-        console.log(video.playbackRate);
-        currentVideoId = newVideoId;
-        video.addEventListener("loadedmetadata", () => {
-          console.log("영상속도변경");
-          video.playbackRate = 2;
-        });
-      }
-    }
+
+  const newVideoId = getCurrentVideoId();
+  if (currentVideoId !== newVideoId) {
+    handleVideoChange(video);
+    currentVideoId = newVideoId;
   }
+
+  // for (const mutation of mutationsList) {
+  //   if (mutation.type === "childList") {
+  //     const newVideoId = getCurrentVideoId();
+  //     if (currentVideoId !== newVideoId) {
+  //       handleVideoChange(video);
+  //       currentVideoId = newVideoId;
+  //     }
+  //   }
+  // }
 };
 const observer = new MutationObserver(callback);
 observer.observe(targetNode, config);
