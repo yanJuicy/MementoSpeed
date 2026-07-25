@@ -34,36 +34,28 @@ function handleVideoChange(video) {
 }
 
 let currentVideoId = getCurrentVideoId();
+let previousVideo = null;
 
 const targetNode = document.body;
 const config = { subtree: true, childList: true };
 const callback = (mutationsList, observer) => {
-  // 비디오 페이지가 아니면 종료
-  if (!checkVideoPage()) {
-    return;
-  }
-
-  // <video> 태그가 존재하면 속도 조절
   const video = findVideo();
-  if (!video) {
-    return;
-  }
 
-  const newVideoId = getCurrentVideoId();
-  if (currentVideoId !== newVideoId) {
-    handleVideoChange(video);
-    currentVideoId = newVideoId;
-  }
+  if (!video) return;
+  if (previousVideo !== video) {
+    console.log("영상 변경!");
 
-  // for (const mutation of mutationsList) {
-  //   if (mutation.type === "childList") {
-  //     const newVideoId = getCurrentVideoId();
-  //     if (currentVideoId !== newVideoId) {
-  //       handleVideoChange(video);
-  //       currentVideoId = newVideoId;
-  //     }
-  //   }
-  // }
+    console.log(video);
+    console.log(video.currentSrc);
+  }
+  previousVideo = video;
 };
 const observer = new MutationObserver(callback);
 observer.observe(targetNode, config);
+
+document.addEventListener("yt-navigate-finish", () => {
+  console.log("navigate finish");
+
+  const video = findVideo();
+  applyPlaybackRate(video, 2);
+});
