@@ -3,6 +3,7 @@
   "name": "Memento Speed",
   "version": "1.0",
   "description": "Remember Youtbe Video Speed",
+  "permissions": ["storage", "tabs"],
   "content_scripts": [
     {
       "js": ["scripts/content.js"],
@@ -10,5 +11,8 @@
         "https://www.youtube.com/*"
       ]
     }
-  ]
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
 }

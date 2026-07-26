@@ -18,44 +18,32 @@ function applyPlaybackRate(video, playbackRate) {
 }
 
 function handleVideoChange(video) {
-  console.log("영상 변경!");
-  console.log(video);
   console.log(`video readyState: ${video.readyState}`);
   console.log(`video playbackRate: ${video.playbackRate}`);
 
-  console.log("loadedmetadata 리스너 등록");
-  video.addEventListener(
-    "loadedmetadata",
-    () => {
-      applyPlaybackRate(video, 2);
-    },
-    { once: true },
-  );
+  chrome.storage.local.get("playbackRate", ({ playbackRate }) => {
+    const storedVideoSpeed = playbackRate ?? 1;
+
+    console.log(`playbackRate: ${storedVideoSpeed}`);
+    applyPlaybackRate(video, storedVideoSpeed);
+  });
+
+  // console.log("loadedmetadata 리스너 등록");
+  // video.addEventListener("loadedmetadata", () => {
+  //   chrome.storage.local.get("playbackRate", ({ playbackRate }) => {
+  //     applyPlaybackRate(video, playbackRate);
+  //   });
+  // });
 }
-
-let currentVideoId = getCurrentVideoId();
-let previousVideo = null;
-
-const targetNode = document.body;
-const config = { subtree: true, childList: true };
-const callback = (mutationsList, observer) => {
-  const video = findVideo();
-
-  if (!video) return;
-  if (previousVideo !== video) {
-    console.log("영상 변경!");
-
-    console.log(video);
-    console.log(video.currentSrc);
-  }
-  previousVideo = video;
-};
-const observer = new MutationObserver(callback);
-observer.observe(targetNode, config);
 
 document.addEventListener("yt-navigate-finish", () => {
   console.log("navigate finish");
 
   const video = findVideo();
-  applyPlaybackRate(video, 2);
+  handleVideoChange(video);
+});
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  const video = findVideo();
+  applyPlaybackRate(video, message.playbackRate);
 });
