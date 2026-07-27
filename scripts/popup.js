@@ -3,9 +3,6 @@ const saveButton = document.getElementById("saveButton");
 
 saveButton.addEventListener("click", () => {
   const videoSpeed = Number(playbackRate.value);
-  chrome.storage.local.set({
-    playbackRate: videoSpeed,
-  });
 
   chrome.tabs
     .query({
