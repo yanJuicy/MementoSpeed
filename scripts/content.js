@@ -21,19 +21,16 @@ function handleVideoChange(video) {
   console.log(`video readyState: ${video.readyState}`);
   console.log(`video playbackRate: ${video.playbackRate}`);
 
-  chrome.storage.local.get("playbackRate", ({ playbackRate }) => {
-    const storedVideoSpeed = playbackRate ?? 1;
+  chrome.storage.local.get("videos", ({ videos }) => {
+    const videoId = getCurrentVideoId();
+    if (!videos || !videos[videoId]) {
+      return;
+    }
 
+    const storedVideoSpeed = videos[videoId].speed;
     console.log(`playbackRate: ${storedVideoSpeed}`);
     applyPlaybackRate(video, storedVideoSpeed);
   });
-
-  // console.log("loadedmetadata 리스너 등록");
-  // video.addEventListener("loadedmetadata", () => {
-  //   chrome.storage.local.get("playbackRate", ({ playbackRate }) => {
-  //     applyPlaybackRate(video, playbackRate);
-  //   });
-  // });
 }
 
 document.addEventListener("yt-navigate-finish", () => {
@@ -46,4 +43,17 @@ document.addEventListener("yt-navigate-finish", () => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const video = findVideo();
   applyPlaybackRate(video, message.playbackRate);
+  const videoId = getCurrentVideoId();
+  chrome.storage.local.get("videos", ({ videos }) => {
+    const newVideos = videos ?? {};
+
+    newVideos[videoId] = {
+      videoId: videoId,
+      speed: message.playbackRate,
+    };
+
+    chrome.storage.local.set({
+      videos: newVideos,
+    });
+  });
 });
