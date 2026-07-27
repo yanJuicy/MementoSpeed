@@ -4,8 +4,9 @@ YouTube 영상의 재생 속도를 자동으로 관리하는 Chrome Extension입
 
 사용자가 원하는 재생 속도를 저장하고, YouTube 영상 시청 시 자동으로 적용하는 것을 목표로 합니다.
 
-현재는 기본 재생 속도 저장 및 Popup을 통한 즉시 변경 기능을 구현하고 있으며,
-향후 영상별, 채널별, 카테고리별 속도 관리와 AI 기반 추천 기능까지 확장할 예정입니다.
+현재는 Popup을 통한 재생 속도 변경, Chrome Storage 저장,
+영상별 재생 속도 관리 기능을 구현했으며,
+향후 채널별, 카테고리별 속도 관리와 AI 기반 추천 기능까지 확장할 예정입니다.
 
 ---
 
@@ -62,17 +63,72 @@ Memento Speed는 이러한 반복 작업을 자동화하여
 
 ## ✅ 재생 속도 저장
 
-`chrome.storage.local`을 활용하여 사용자가 선택한 속도를 저장합니다.
+`chrome.storage.local`을 활용하여 사용자가 설정한 재생 속도를 저장합니다.
+
+초기에는 모든 영상에 동일한 속도를 적용하는 구조였지만,
+영상별 설정을 관리하기 위해 videoId 기반 저장 구조로 개선했습니다.
 
 현재 저장 구조:
 
 ```json
 {
-  "playbackRate": 1.5
+  "videos": {
+    "youtube_video_id": {
+      "speed": 2
+    }
+  }
 }
 ```
 
-저장된 값은 브라우저를 종료해도 유지됩니다.
+예:
+
+```json
+{
+  "videos": {
+    "VPq8SNXWDCQ": {
+      "speed": 2
+    },
+    "abc123": {
+      "speed": 1.5
+    }
+  }
+}
+```
+
+저장된 영상은 브라우저를 종료해도 설정이 유지됩니다.
+
+---
+
+## ✅ 영상별 재생 속도 자동 적용
+
+YouTube 영상 이동 시 현재 videoId를 확인하고,
+저장된 속도가 존재하는 경우 해당 속도를 자동 적용합니다.
+
+동작 구조:
+
+```
+YouTube Navigation Event
+
+        ↓
+
+현재 videoId 확인
+
+        ↓
+
+chrome.storage 조회
+
+        ↓
+
+영상별 속도 설정 존재?
+
+        ↓
+
+있음 → 저장된 속도 적용
+
+없음 → YouTube 기본 설정 유지
+```
+
+저장하지 않은 영상은 사용자가 YouTube에서 설정한 기존 재생 속도를 유지합니다.
 
 ---
 
@@ -85,8 +141,6 @@ Popup에서 변경한 속도를 현재 YouTube 페이지에 즉시 적용합니�
 ```
 Popup
  |
- | chrome.storage.local.set()
- |
  | chrome.tabs.query()
  |
  | chrome.tabs.sendMessage()
@@ -96,6 +150,10 @@ Content Script
  | chrome.runtime.onMessage()
  ↓
 video.playbackRate 변경
+
+        ↓
+
+videoId 기반 Storage 저장
 ```
 
 ---
@@ -114,6 +172,9 @@ yt-navigate-finish
         |
         ↓
 video 탐색
+        |
+        ↓
+현재 videoId 확인
         |
         ↓
 저장된 재생 속도 적용
@@ -148,7 +209,36 @@ MutationObserver
 YouTube Navigation Event
 ```
 
-플랫폼에서 제공하는 이벤트가 있다면 DOM 감시보다 해당 이벤트를 사용하는 것이 적절하다는 것을 학습했습니다.
+플랫폼에서 제공하는 이벤트가 있다면 DOM 감시보다
+해당 이벤트를 사용하는 것이 적절하다는 것을 학습했습니다.
+
+---
+
+## chrome.storage 데이터 관리
+
+Chrome Storage는 단순히 값을 저장하는 것이 아니라,
+기존 데이터를 읽고 수정한 뒤 다시 저장하는 방식으로 관리합니다.
+
+데이터 변경 흐름:
+
+```
+chrome.storage.local.get()
+
+        ↓
+
+기존 데이터 조회
+
+        ↓
+
+JavaScript 객체 수정
+
+        ↓
+
+chrome.storage.local.set()
+
+```
+
+이를 통해 영상별 CRUD 구조를 구현했습니다.
 
 ---
 
@@ -171,31 +261,7 @@ const tabs = await chrome.tabs.query({
 
 # 🚧 개발 예정 기능
 
-## 1. 영상별 재생 속도 저장
-
-현재:
-
-```json
-{
-  "playbackRate": 1.5
-}
-```
-
-개선:
-
-```json
-{
-  "videos": {
-    "youtube_video_id": 1.5
-  }
-}
-```
-
-특정 영상마다 다른 재생 속도를 저장할 예정입니다.
-
----
-
-## 2. 채널별 재생 속도 저장
+## 1. 채널별 재생 속도 저장
 
 채널마다 원하는 재생 속도를 저장합니다.
 
@@ -206,9 +272,21 @@ const tabs = await chrome.tabs.query({
 음악 채널 → 1배
 ```
 
+예상 구조:
+
+```json
+{
+  "channels": {
+    "channel_id": {
+      "speed": 1.75
+    }
+  }
+}
+```
+
 ---
 
-## 3. 카테고리별 자동 속도 설정
+## 2. 카테고리별 자동 속도 설정
 
 콘텐츠 유형에 따라 기본 재생 속도를 설정합니다.
 
@@ -230,7 +308,7 @@ News
 
 ---
 
-## 4. AI 기반 재생 속도 추천
+## 3. AI 기반 재생 속도 추천
 
 장기적으로 사용자의 시청 패턴과 영상 정보를 활용하여
 적절한 재생 속도를 추천하는 기능을 목표로 합니다.
