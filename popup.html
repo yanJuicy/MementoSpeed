@@ -1,27 +1,41 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Memento Speed</title>
-    <link rel="stylesheet" href="popup.css">
-</head>
-<body>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <h2>Memento Speed</h2>
 
-<h2>Memento Speed</h2>
+    <div class="setting-group">
+      <label for="videoPlaybackRate">영상 재생 속도</label>
 
-<label for="playbackRate">재생 속도</label>
+      <select id="videoPlaybackRate">
+        <option value="1" selected>1x</option>
+        <option value="1.25">1.25x</option>
+        <option value="1.5">1.5x</option>
+        <option value="1.75">1.75x</option>
+        <option value="2">2x</option>
+      </select>
 
-<select id="playbackRate">
-    <option value="1" selected>1x</option>
-    <option value="1.25">1.25x</option>
-    <option value="1.5">1.5x</option>
-    <option value="1.75">1.75x</option>
-    <option value="2">2x</option>
-</select>
+      <button id="saveVideoButton">영상 저장</button>
+    </div>
 
-<button id="saveButton">저장</button>
+    <div class="setting-group">
+      <label for="channelPlaybackRate">채널 재생 속도</label>
 
-<script src="scripts/popup.js"></script>
+      <select id="channelPlaybackRate">
+        <option value="1" selected>1x</option>
+        <option value="1.25">1.25x</option>
+        <option value="1.5">1.5x</option>
+        <option value="1.75">1.75x</option>
+        <option value="2">2x</option>
+      </select>
 
-</body>
+      <button id="saveChannelButton">채널 저장</button>
+    </div>
+
+    <script src="scripts/popup.js"></script>
+  </body>
 </html>

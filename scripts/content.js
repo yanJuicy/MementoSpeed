@@ -21,15 +21,61 @@ function handleVideoChange(video) {
   console.log(`video readyState: ${video.readyState}`);
   console.log(`video playbackRate: ${video.playbackRate}`);
 
-  chrome.storage.local.get("videos", ({ videos }) => {
+  chrome.storage.local.get(["videos", "channels"], ({ videos, channels }) => {
     const videoId = getCurrentVideoId();
-    if (!videos || !videos[videoId]) {
+    if (videos && videos[videoId]) {
+      const storedVideoSpeed = videos[videoId].speed;
+      console.log(`playbackRate: ${storedVideoSpeed}`);
+      applyPlaybackRate(video, storedVideoSpeed);
       return;
     }
 
-    const storedVideoSpeed = videos[videoId].speed;
-    console.log(`playbackRate: ${storedVideoSpeed}`);
-    applyPlaybackRate(video, storedVideoSpeed);
+    const channelId = getCurrentChannelId();
+    if (channels && channels[channelId]) {
+      const storedChannelSpeed = channels[channelId].speed;
+      console.log(`playbackRate: ${storedChannelSpeed}`);
+      applyPlaybackRate(video, storedChannelSpeed);
+      return;
+    }
+  });
+}
+
+function getCurrentChannelId() {
+  const channel = document.querySelector(
+    "ytd-video-owner-renderer #channel-name a",
+  );
+  return channel.href.split("/").pop();
+}
+
+function saveVideoSpeed(videoSpeed) {
+  chrome.storage.local.get("videos", ({ videos }) => {
+    const newVideos = videos ?? {};
+    const videoId = getCurrentVideoId();
+
+    newVideos[videoId] = {
+      videoId: videoId,
+      speed: videoSpeed,
+    };
+
+    chrome.storage.local.set({
+      videos: newVideos,
+    });
+  });
+}
+
+function saveChannelSpeed(videoSpeed) {
+  chrome.storage.local.get("channels", ({ channels }) => {
+    const newChannels = channels ?? {};
+    const channelId = getCurrentChannelId();
+
+    newChannels[channelId] = {
+      channelId: channelId,
+      speed: videoSpeed,
+    };
+
+    chrome.storage.local.set({
+      channels: newChannels,
+    });
   });
 }
 
@@ -42,18 +88,18 @@ document.addEventListener("yt-navigate-finish", () => {
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const video = findVideo();
-  applyPlaybackRate(video, message.playbackRate);
-  const videoId = getCurrentVideoId();
-  chrome.storage.local.get("videos", ({ videos }) => {
-    const newVideos = videos ?? {};
 
-    newVideos[videoId] = {
-      videoId: videoId,
-      speed: message.playbackRate,
-    };
+  const type = message.type;
+  const speed = message.playbackRate;
 
-    chrome.storage.local.set({
-      videos: newVideos,
-    });
-  });
+  switch (type) {
+    case "SAVE_VIDEO_SPEED":
+      saveVideoSpeed(speed);
+      break;
+    case "SAVE_CHANNEL_SPEED":
+      saveChannelSpeed(speed);
+      break;
+  }
+
+  applyPlaybackRate(video, speed);
 });
