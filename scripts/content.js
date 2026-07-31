@@ -94,12 +94,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   switch (type) {
     case "SAVE_VIDEO_SPEED":
+      applyPlaybackRate(video, speed);
       saveVideoSpeed(speed);
       break;
     case "SAVE_CHANNEL_SPEED":
+      applyPlaybackRate(video, speed);
       saveChannelSpeed(speed);
       break;
-  }
+    case "GET_CURRENT_SPEED":
+      chrome.storage.local.get(
+        ["videos", "channels"],
+        ({ videos, channels }) => {
+          const videoId = getCurrentVideoId();
+          const storedVideoSpeed = videos?.[videoId]?.speed ?? 1;
 
-  applyPlaybackRate(video, speed);
+          const channelId = getCurrentChannelId();
+          const storedChannelSpeed = channels?.[channelId]?.speed ?? 1;
+          sendResponse({
+            videoSpeed: storedVideoSpeed,
+            channelSpeed: storedChannelSpeed,
+          });
+        },
+      );
+      // sendResponse 응답을 받기 위해 return true
+      return true;
+  }
 });
