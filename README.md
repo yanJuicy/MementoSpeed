@@ -377,7 +377,7 @@ chrome.storage.local.set()
 
 ```javascript
 {
-  playbackRate: 2
+  playbackRate: 2;
 }
 ```
 
@@ -401,7 +401,7 @@ chrome.storage.local.set()
 
 ```javascript
 {
-  type: "GET_CURRENT_SPEED"
+  type: "GET_CURRENT_SPEED";
 }
 ```
 
